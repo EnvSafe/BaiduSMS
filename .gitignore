@@ -2,4 +2,8 @@
 # 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
 ################################################################################
 
-/EnvSafe.BaiduSMS/obj/Debug
+/EnvSafe.BaiduSMS/bin
+/EnvSafe.BaiduSMS/obj
+/packages
+/Test/bin
+/Test/obj

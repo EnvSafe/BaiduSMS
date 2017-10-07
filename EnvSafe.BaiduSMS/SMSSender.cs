@@ -1,108 +1,82 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace EnvSafe.BaiduSMS
+namespace EnvSafe.Baidu.SMS
 {
     public class SMSSender
     {
-
-        public string SendSMSWEBAPI(SMSInfo smsinfo)
+        public SMSSender(BCE auth, SMSSettings settings)
         {
-            try
-            {
-                System.IO.Stream receiveStream = null;
-                System.IO.StreamReader responseReader = null;
-                string timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
-                // string timestamp2 As String = Date.UtcNow.ToString("yyyy-MM-dd")
-                string SecretAccessKey = "申请所得";
-                string AccessKeyId = "申请所得";
-                //   '  Dim authStringPrefix As String = "bce-auth-v1/{accessKeyId}/{timestamp}/{expirationPeriodInSeconds}"
-                string authStringPrefix = string.Format("bce-auth-v1/{1}/{0}/1800", timestamp, AccessKeyId);// '这里要改
-                //  ' Dim CanonicalRequest As String = "HTTP Method + "\n" + CanonicalURI + "\n" + CanonicalQueryString + "\n" + CanonicalHeaders"
-                string CanonicalRequest = string.Format("POST" + "\n" + "/v1/message" + "\n" + "\n" + "host:sms.bj.baidubce.com");
-                string SigningKey = GetSigningKeyByHMACSHA256HEX(SecretAccessKey, authStringPrefix);
-                string Signature = GetSignatureByHMACSHA256HEX(SigningKey, CanonicalRequest);
-                string Content = string.Empty;
-
-                // Content = "{ \"templateId\":" + smsinfo.TemplateId + ",\"receiver\":" + smsinfo.Receiver + ",\"contentVar\":" + smsinfo.ContentVar + "}";
-                Content = "{" + "\"" + "templateId" + "\"" + ":" + smsinfo.TemplateId + "," + "\"" + "receiver" + "\"" + ":" + smsinfo.Receiver + "," + "\"" + "contentVar" + "\"" + ":" + smsinfo.ContentVar + "}";
-                string temp = Content.ToString();
-                byte[] ContentByte = Encoding.UTF8.GetBytes(temp);
-                string GetOrderURL = new Uri("http://sms.bj.baidubce.com/v1/message").ToString();
-                System.Net.HttpWebRequest HttpWReq = (WebRequest.Create(GetOrderURL) as System.Net.HttpWebRequest);
-                //' HttpWReq.Timeout = 600 * 1000 ''一分钟查询
-                HttpWReq.ContentLength = ContentByte.Length;
-                HttpWReq.ContentType = "application/json";
-                HttpWReq.Headers["x-bce-date"] = timestamp;
-                HttpWReq.Headers["Authorization"] = string.Format("bce-auth-v1/{2}/{0}/1800/host/{1}", timestamp, Signature, AccessKeyId);
-                HttpWReq.Host = "sms.bj.baidubce.com";
-                HttpWReq.Method = "POST";
-                HttpWReq.KeepAlive = false;
-                System.IO.Stream StreamData = HttpWReq.GetRequestStream();
-                StreamData.Write(ContentByte, 0, ContentByte.Length);
-                StreamData.Close();
-                System.Net.HttpWebResponse HttpWRes = (System.Net.HttpWebResponse)HttpWReq.GetResponse();
-
-                if (HttpWRes.Headers.Get("Content-Encoding") == "gzip")
-                {
-                    System.IO.Stream zipStream = HttpWRes.GetResponseStream();
-                    receiveStream = new GZipStream(zipStream, CompressionMode.Decompress);
-                }
-                else
-                {
-                    receiveStream = HttpWRes.GetResponseStream();
-                }
-                responseReader = new System.IO.StreamReader(receiveStream);
-                string responseString = responseReader.ReadToEnd();
-                return responseString;
-
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            Auth = auth;
+            Settings = settings;
         }
 
         /// <summary>
-        /// 获取 hash
+        /// 当前 SMS 配置
         /// </summary>
-        /// <param name="SecretAccessKey"></param>
-        /// <param name="authStringPrefix"></param>
+        public SMSSettings Settings { get; set; }
+        /// <summary>
+        /// 认证实体
+        /// </summary>
+        public BCE Auth { get; set; }
+
+        /// <summary>
+        /// 使用 POST 执行短信下发
+        /// </summary>
+        /// <param name="smsinfo"></param>
         /// <returns></returns>
-        public string GetSigningKeyByHMACSHA256HEX(String SecretAccessKey, String authStringPrefix)
+        public SMSResult SendMessage(SMSInfo smsinfo, string url = "bce/v2/message")
         {
-            HMACSHA256 Livehmacsha256 = new HMACSHA256(Encoding.UTF8.GetBytes(SecretAccessKey));
-            byte[] LiveHash = Livehmacsha256.ComputeHash(Encoding.UTF8.GetBytes(authStringPrefix));
-            string SigningKey = HashEncode(LiveHash);
-            return SigningKey;
-        }
-        /// <summary>
-        /// 获取 hash
-        /// </summary>
-        /// <param name="SigningKey"></param>
-        /// <param name="CanonicalRequest"></param>
-        /// <returns></returns>
-        public string GetSignatureByHMACSHA256HEX(String SigningKey, String CanonicalRequest)
-        {
-            HMACSHA256 Livehmacsha256 = new HMACSHA256(Encoding.UTF8.GetBytes(SigningKey));
-            byte[] LiveHash = Livehmacsha256.ComputeHash(Encoding.UTF8.GetBytes(CanonicalRequest));
-            string Signature = HashEncode(LiveHash);
-            return Signature;
+            var time = DateTime.UtcNow;
+
+            string CanonicalRequest = $"POST\n/{url}\n\nhost:{Settings.APIServer}";
+
+            string Content = smsinfo.GetJson();
+            byte[] ContentByte = Encoding.UTF8.GetBytes(Content);
+
+            string requestUri = new Uri($"http://{Settings.APIServer}/{url}").ToString();
+            HttpWebRequest smsRequest = (WebRequest.Create(requestUri) as HttpWebRequest);
+            smsRequest.Host = Settings.APIServer;
+            smsRequest.Method = "POST";
+            smsRequest.KeepAlive = false;
+            smsRequest.Timeout = Settings.Timeout;
+            smsRequest.ContentType = "application/json";
+            smsRequest.ContentLength = ContentByte.Length;
+            smsRequest.Headers["x-bce-date"] = time.ToString("YYYY-MM-DD");
+            smsRequest.Headers["Authorization"] = Auth.GetAuthString(time, CanonicalRequest, "host");
+            smsRequest.Headers["x-bce-content-sha256"] = GetSHA256hash(Content);
+
+            System.IO.Stream StreamData = smsRequest.GetRequestStream();
+            StreamData.Write(ContentByte, 0, ContentByte.Length);
+            StreamData.Close();
+
+            HttpWebResponse smsResponse = (HttpWebResponse)smsRequest.GetResponse();
+            System.IO.Stream receiveStream = null;
+            System.IO.StreamReader responseReader = null;
+            if (smsResponse.Headers.Get("Content-Encoding") == "gzip")
+            {
+                System.IO.Stream zipStream = smsResponse.GetResponseStream();
+                receiveStream = new GZipStream(zipStream, CompressionMode.Decompress);
+            }
+            else
+            {
+                receiveStream = smsResponse.GetResponseStream();
+            }
+            responseReader = new System.IO.StreamReader(receiveStream);
+            string responseString = responseReader.ReadToEnd();
+            return JsonConvert.DeserializeObject<SMSResult>(responseString);
         }
 
-        // '将字符串全部变成小写。
-        public string HashEncode(byte[] hash)
-        {
-            return BitConverter.ToString(hash).Replace("-", "").ToLower();
-        }
+        #region Utility
 
         /// <summary>
-        /// reverse? 获取输入文本的 hash 值（移除了 - ）
+        /// SHA256 HASH
         /// </summary>
-        /// <param name="input">输入文本</param>
+        /// <param name="input"></param>
         /// <returns></returns>
         public string GetSHA256hash(string input)
         {
@@ -114,5 +88,7 @@ namespace EnvSafe.BaiduSMS
             string output = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
             return output;
         }
+
+        #endregion
     }
 }
