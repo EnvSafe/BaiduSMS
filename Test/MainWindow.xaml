@@ -4,9 +4,35 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Test"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        xmlns:h="clr-namespace:Heroius.Extension;assembly=Heroius.Extension.WPF"
+        mc:Ignorable="d" Icon="baidu.ico"
+        Title="BCE Test" Height="350" Width="525">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Menu>
+            <MenuItem Header="文件">
+                <MenuItem Header="保存配置" Click="SaveSettings_Click"/>
+                <Separator/>
+                <MenuItem Header="导入配置" Click="ImportSettings_Click"/>
+            </MenuItem>
+            <MenuItem Header="配置">
+                <MenuItem Header="编辑配置" Click="EditSettings_Click"/>
+            </MenuItem>
+        </Menu>
+        <Grid Grid.Row="1">
+            <GroupBox Header="SMS Test">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <h:PropertyPanel DataContext="{Binding Path=smsinfo}" ColumnCount="2"/>
+                    <Button Grid.Row="1" Width="auto" Click="SendSMS_Click" Content="发送"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>
