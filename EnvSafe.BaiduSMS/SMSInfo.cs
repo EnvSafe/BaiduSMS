@@ -14,17 +14,20 @@ namespace EnvSafe.Baidu.SMS
         /// 调用ID
         /// </summary>
         [Description("调用ID")]
-        public string InvokeID { get { return _InvokeID; } set { _InvokeID = value; RaisePropertyChangedEvent("InvokeID"); } } string _InvokeID;
+        public string InvokeID { get { return _InvokeID; } set { _InvokeID = value; RaisePropertyChangedEvent("InvokeID"); } }
+        string _InvokeID;
         /// <summary>
         /// 采用的模板
         /// </summary>
         [Description("采用的模板编号")]
-        public string TemplateCode { get { return _TemplateCode; } set { _TemplateCode = value; RaisePropertyChangedEvent("TemplateCode"); } } string _TemplateCode;
+        public string TemplateCode { get { return _TemplateCode; } set { _TemplateCode = value; RaisePropertyChangedEvent("TemplateCode"); } }
+        string _TemplateCode;
         /// <summary>
         /// 接受者号码
         /// </summary>
         [Description("接受者号码")]
-        public string PhoneNumber { get { return _PhoneNumber; } set { _PhoneNumber = value; RaisePropertyChangedEvent("PhoneNumber"); } } string _PhoneNumber;
+        public string PhoneNumber { get { return _PhoneNumber; } set { _PhoneNumber = value; RaisePropertyChangedEvent("PhoneNumber"); } }
+        string _PhoneNumber;
         /// <summary>
         /// 模板变量
         /// </summary>
@@ -36,7 +39,7 @@ namespace EnvSafe.Baidu.SMS
         /// <returns></returns>
         public string GetJson()
         {
-            return $"{{\"invokeId\":\"{InvokeID}\",\"phoneNumber\":\"{PhoneNumber}\",\"templateCode\":\"{TemplateCode}\"{(ContentVar == null ? "" : $",\"contentVar\":{{{ContentVar.Select(kvp => $"\"{kvp.Key}\":\"{kvp.Value}\"").Merge(",")}}}")}}}";
+            return $"{{\"invokeId\":\"{InvokeID}\",\"phoneNumber\":\"{PhoneNumber}\",\"templateCode\":\"{TemplateCode}\"{((ContentVar == null || ContentVar.Count == 0) ? "" : $",\"contentVar\":{{{ContentVar.Select(kvp => $"\"{kvp.Key}\":\"{kvp.Value}\"").Merge(",")}}}")}}}";
         }
     }
 }

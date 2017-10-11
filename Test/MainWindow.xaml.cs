@@ -21,13 +21,14 @@ namespace Test
 
             sms = new SMSSender(new BCE(new BCESettings()), new SMSSettings());
             smsinfo = new SMSInfo();
+            smsinfoshell = new SMSInfoShell(smsinfo);
 
             DataContext = this;
         }
 
         SMSSender sms;
-
-        public SMSInfo smsinfo { get; set; }
+        SMSInfo smsinfo;
+        public SMSInfoShell smsinfoshell { get; set; }
 
         #region Menu
 
@@ -68,7 +69,7 @@ namespace Test
             try
             {
                 var result = sms.SendMessage(smsinfo);
-                MessageBox.Show(((SMSCode)result.Code).ToString());
+                MessageBox.Show($"{result.Code} : {result.Message}");
             }
             catch(Exception ex)
             {
