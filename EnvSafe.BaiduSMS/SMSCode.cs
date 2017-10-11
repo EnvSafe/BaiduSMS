@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace EnvSafe.Baidu.SMS
+﻿namespace EnvSafe.Baidu.SMS
 {
+    /// <summary>
+    /// 保留的SMS发送结果代码
+    /// <para>注意，服务返回的代码可能不在此枚举中</para>
+    /// </summary>
     public enum SMSCode
     {
         调用成功 = 0,

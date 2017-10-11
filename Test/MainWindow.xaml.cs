@@ -1,8 +1,10 @@
 ﻿using EnvSafe.Baidu;
 using EnvSafe.Baidu.SMS;
+using Heroius.Extension;
 using Heroius.Files;
 using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 
 namespace Test
@@ -21,14 +23,16 @@ namespace Test
 
             sms = new SMSSender(new BCE(new BCESettings()), new SMSSettings());
             smsinfo = new SMSInfo();
-            smsinfoshell = new SMSInfoShell(smsinfo);
+
+            hppSms.PredefinedPropertyAttributeDictionary = new Dictionary<string, PropertyPanelAttribute>() {
+                { "ContentVar", new PropertyPanelAttribute() { Order = -1 } }
+            };
 
             DataContext = this;
         }
 
         SMSSender sms;
-        SMSInfo smsinfo;
-        public SMSInfoShell smsinfoshell { get; set; }
+        public SMSInfo smsinfo { get; set; }
 
         #region Menu
 

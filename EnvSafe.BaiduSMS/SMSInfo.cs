@@ -6,14 +6,14 @@ using System.ComponentModel;
 namespace EnvSafe.Baidu.SMS
 {
     /// <summary>
-    /// 发送的消息
+    /// 发送的消息（message）
     /// </summary>
     public class SMSInfo : ObservableEntity
     {
         /// <summary>
-        /// 调用ID
+        /// 签名调用ID
         /// </summary>
-        [Description("调用ID")]
+        [Description("签名调用ID")]
         public string InvokeID { get { return _InvokeID; } set { _InvokeID = value; RaisePropertyChangedEvent("InvokeID"); } }
         string _InvokeID;
         /// <summary>
@@ -28,10 +28,29 @@ namespace EnvSafe.Baidu.SMS
         [Description("接受者号码")]
         public string PhoneNumber { get { return _PhoneNumber; } set { _PhoneNumber = value; RaisePropertyChangedEvent("PhoneNumber"); } }
         string _PhoneNumber;
+
         /// <summary>
         /// 模板变量
         /// </summary>
         public Dictionary<string, string> ContentVar { get; set; }
+
+        /// <summary>
+        /// 模板变量的json表述
+        /// </summary>
+        [Description("模板变量的json表述")]
+        public string ContentJson
+        {
+            get
+            {
+                return (ContentVar == null || ContentVar.Count == 0) ? "" : $"{{{ContentVar.Select(kvp => $"\"{kvp.Key}\":\"{kvp.Value}\"").Merge(",")}}}";
+            }
+            set
+            {
+                var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(value);
+                ContentVar = obj;
+                RaisePropertyChangedEvent("ContentJson");
+            }
+        }
 
         /// <summary>
         /// 获取 json 格式文本，作为请求主体

@@ -7,8 +7,16 @@ using System.Text;
 
 namespace EnvSafe.Baidu.SMS
 {
+    /// <summary>
+    /// 短消息服务访问器（client）
+    /// </summary>
     public class SMSSender
     {
+        /// <summary>
+        /// 实例化 短消息服务访问器（client）
+        /// </summary>
+        /// <param name="auth">鉴权（profile）</param>
+        /// <param name="settings">访问设置</param>
         public SMSSender(BCE auth, SMSSettings settings)
         {
             Auth = auth;
@@ -27,7 +35,7 @@ namespace EnvSafe.Baidu.SMS
         /// <summary>
         /// 使用 POST 执行短信下发
         /// </summary>
-        /// <param name="smsinfo"></param>
+        /// <param name="smsinfo">消息（message）</param>
         /// <returns></returns>
         public SMSResult SendMessage(SMSInfo smsinfo, string url = "bce/v2/message")
         {
